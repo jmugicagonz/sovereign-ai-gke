@@ -18,147 +18,146 @@ import google.cloud.logging as logging
 import traceback
 
 from flask import Flask, render_template, request, jsonify
-# from langchain.chains import LLMChain
-# from langchain.llms import HuggingFaceTextGenInference
-# from langchain.prompts import PromptTemplate
-# from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
-# from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
+from langchain.chains import LLMChain
+from langchain.llms import HuggingFaceTextGenInference
+from langchain.prompts import PromptTemplate
+from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
+from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
 # from cloud_sql import cloud_sql
-# import sqlalchemy
+import sqlalchemy
 
-# Setup logging
-# logging_client = logging.Client()
-# logging_client.setup_logging()
+#Setup logging
+logging_client = logging.Client()
+logging_client.setup_logging()
 
 app = Flask(__name__, static_folder='static')
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 
-# # initialize parameters
-# INFERENCE_ENDPOINT=os.environ.get('INFERENCE_ENDPOINT', '127.0.0.1:8081')
+# initialize parameters
+MISTRAL_INFERENCE_ENDPOINT = os.environ.get('INFERENCE_ENDPOINT_MISTRAL7B', 'mistral-endpoint')
+CODEGEMMA_INFERENCE_ENDPOINT = os.environ.get('INFERENCE_ENDPOINT_CODEGEMMA7B', 'codegemma-endpoint')
 
-# llm = HuggingFaceTextGenInference(
-#     inference_server_url=f'http://{INFERENCE_ENDPOINT}/',
-#     max_new_tokens=512,
-#     top_k=10,
-#     top_p=0.95,
-#     typical_p=0.95,
-#     temperature=0.01,
-#     repetition_penalty=1.03,
-# )
+model_configs = {
+    "Mistral7B": {
+        "endpoint": MISTRAL_INFERENCE_ENDPOINT ,
+        "params": {
+            'max_new_tokens':512,
+            'top_k': 10,
+            'top_p': 0.95,
+            'typical_p': 0.95,
+            'temperature': 0.01,
+            'repetition_penalty': 1.03,
+        }
+    },
+    "CodeGemma7b": {
+        "endpoint":CODEGEMMA_INFERENCE_ENDPOINT ,
+        "params": {
+            'max_new_tokens':512,
+            'top_k': 10,
+            'top_p': 0.95,
+            'typical_p': 0.95,
+            'temperature': 0.01,
+            'repetition_penalty': 1.03,
+        }
+    }
+}
 
-# prompt_template = """
-# ### [INST]
-# Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
-# Avoid harmful, unethical, prejudiced, or negative content.
-# Ensure replies promote fairness and positivity.
-# Here is context to help:
+current_model = "Mistral7B"
 
-# {context}
+def init_llm_chain(model_name):
+    llm = HuggingFaceTextGenInference(
+        inference_server_url=f'http://{model_configs[model_name]["endpoint"]}/',
+        **model_configs[model_name]["params"],
+    )
+    prompt = PromptTemplate(
+        input_variables=["context", "user_prompt"],
+        template=prompt_template, 
+    )
+    return LLMChain(llm=llm, prompt=prompt)
 
-# ### QUESTION:
-# {user_prompt}
+llm_chains = {
+    model_name: init_llm_chain(model_name) for model_name in model_configs
+}
 
-# [/INST]
-#  """
+prompt_template = """
+### [INST]
+Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
+Avoid harmful, unethical, prejudiced, or negative content.
+Ensure replies promote fairness and positivity.
+Here is context to help:
 
-# # Create prompt from prompt template
-# prompt = PromptTemplate(
-#     input_variables=["context", "user_prompt"],
-#     template=prompt_template,
-# )
+{context}
 
-# # Create llm chain
-# llm_chain = LLMChain(llm=llm, prompt=prompt)
+### QUESTION:
+{user_prompt}
 
-# @app.route('/get_nlp_status', methods=['GET'])
-# def get_nlp_status():
-#     nlp_enabled = nlp_filter.is_nlp_api_enabled()
-#     return jsonify({"nlpEnabled": nlp_enabled})
-
-# @app.route('/get_dlp_status', methods=['GET'])
-# def get_dlp_status():
-#     dlp_enabled = dlp_filter.is_dlp_api_enabled()
-#     return jsonify({"dlpEnabled": dlp_enabled})
-# @app.route('/get_inspect_templates')
-# def get_inspect_templates():
-#     return jsonify(dlp_filter.list_inspect_templates_from_parent())
-
-# @app.route('/get_deidentify_templates')
-# def get_deidentify_templates():
-#     return jsonify(dlp_filter.list_deidentify_templates_from_parent())
+[/INST]
+ """
 
 # @app.before_request
 # def init_db():
 #     cloud_sql.init_db()
 
 @app.route('/')
-def index():
-    model1_endpoint = os.environ.get('MODEL1_ENDPOINT', 'Mistral7B')
-    model2_endpoint = os.environ.get('MODEL2_ENDPOINT', 'CodeGemma7b')
-    
-    return render_template('index.html', model1_endpoint=model1_endpoint, model2_endpoint=model2_endpoint)
+def index():    
+    return render_template('index.html', model1="Mistral7B", model2="CodeGemma7b")
+
 
 @app.route('/select_model', methods=['POST'])
 def handle_model_selection():
+    global current_model
     data = request.get_json()
-    selected_model = data.get('model')  
+    selected_model = data.get('model')
+    if selected_model in model_configs:
+        current_model = selected_model
+        app.logger.info(f"Selected model: {selected_model}")
+        return jsonify({"message": "Model selection received successfully"})
+    else:
+        return jsonify({"error": "Invalid model selection"}), 400
 
-    app.logger.info(f"Selected model: {selected_model}")  
 
+@app.route('/prompt', methods=['POST'])
+def handlePrompt():
+    data = request.get_json()
+    warnings = []
+    
+    if 'prompt' not in data:
+        return 'missing required prompt', 400
 
-    return jsonify({"message": "Model selection received successfully"}) 
+    user_prompt = data['prompt']
+    log.info(f"handle user prompt: {user_prompt}")
 
-# @app.route('/prompt', methods=['POST'])
-# def handlePrompt():
-#     data = request.get_json()
-#     warnings = []
+    context = ""
 
-#     if 'prompt' not in data:
-#         return 'missing required prompt', 400
+    try:
+        context = cloud_sql.fetchContext(user_prompt)
+    except Exception as err:
+        error_traceback = traceback.format_exc()
+        log.warn(f"Error: {err}\nTraceback:\n{error_traceback}")
+        warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
 
-#     user_prompt = data['prompt']
-#     log.info(f"handle user prompt: {user_prompt}")
+    try:
+        response = llm_chain.invoke({
+            "context": context,
+            "user_prompt": user_prompt
+        })
 
-#     context = ""
-#     try:
-#         context = cloud_sql.fetchContext(user_prompt)
-#     except Exception as err:
-#         error_traceback = traceback.format_exc()
-#         log.warn(f"Error: {err}\nTraceback:\n{error_traceback}")
-#         warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
-
-#     try:
-#         response = llm_chain.invoke({
-#             "context": context,
-#             "user_prompt": user_prompt
-#         })
-#         if 'nlpFilterLevel' in data:
-#             if nlp_filter.is_content_inappropriate(response['text'], data['nlpFilterLevel']):
-#                 response['text'] = 'The response is deemed inappropriate for display.'
-#                 return {'response': response}
-#         if 'inspectTemplate' in data and 'deidentifyTemplate' in data:
-#             inspect_template_path = data['inspectTemplate']
-#             deidentify_template_path = data['deidentifyTemplate']
-#             if inspect_template_path != "" and deidentify_template_path != "":
-#                 # filter the output with inspect setting. Customer can pick any category from https://cloud.google.com/dlp/docs/concepts-infotypes
-#                 response['text'] = dlp_filter.inspect_content(inspect_template_path, deidentify_template_path, response['text'])
-
-#         if warnings:
-#             response['warnings'] = warnings
-#         log.info(f"response: {response}")
-#         return {'response': response}
-#     except Exception as err:
-#         log.info(f"exception from llm: {err}")
-#         traceback.print_exc()
-#         error_traceback = traceback.format_exc()
-#         response = jsonify({
-#             "warnings": warnings,
-#             "error": "An error occurred",
-#             "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}"
-#         })
-#         response.status_code = 500
-#         return response
+        if warnings:
+            response['warnings'] = warnings
+        log.info(f"response: {response}")
+        return {'response': response}
+    except Exception as err:
+        log.info(f"exception from llm: {err}")
+        traceback.print_exc()
+        error_traceback = traceback.format_exc()
+        response = jsonify({
+            "warnings": warnings,
+            "error": "An error occurred",
+            "errorMessage": f"Error: {err}\nTraceback:\n{error_traceback}"
+        })
+        response.status_code = 500
+        return response
 
 
 if __name__ == '__main__':
