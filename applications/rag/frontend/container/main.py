@@ -94,16 +94,18 @@ app.jinja_env.lstrip_blocks = True
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    model1_endpoint = os.environ.get('MODEL1_ENDPOINT', 'Mistral7B')
+    model2_endpoint = os.environ.get('MODEL2_ENDPOINT', 'CodeGemma7b')
+    
+    return render_template('index.html', model1_endpoint=model1_endpoint, model2_endpoint=model2_endpoint)
 
 @app.route('/select_model', methods=['POST'])
 def handle_model_selection():
     data = request.get_json()
-    selected_model = data.get('model')  # Extract selected model
+    selected_model = data.get('model')  
 
-    app.logger.info(f"Selected model: {selected_model}")  # Log for debugging
+    app.logger.info(f"Selected model: {selected_model}")  
 
-    # ... (Do something with the selected_model, like storing it in a variable)
 
     return jsonify({"message": "Model selection received successfully"}) 
 
