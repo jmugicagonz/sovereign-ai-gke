@@ -138,7 +138,7 @@ def handlePrompt():
         warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
 
     try:
-        response = llm_chain.invoke({
+        response = llm_chains[current_model].invoke({
             "context": context,
             "user_prompt": user_prompt
         })
