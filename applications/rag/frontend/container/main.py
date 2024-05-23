@@ -65,21 +65,6 @@ model_configs = {
 
 current_model = "Mistral7B"
 
-def init_llm_chain(model_name):
-    llm = HuggingFaceTextGenInference(
-        inference_server_url=f'http://{model_configs[model_name]["endpoint"]}/',
-        **model_configs[model_name]["params"],
-    )
-    prompt = PromptTemplate(
-        input_variables=["context", "user_prompt"],
-        template=prompt_template, 
-    )
-    return LLMChain(llm=llm, prompt=prompt)
-
-llm_chains = {
-    model_name: init_llm_chain(model_name) for model_name in model_configs
-}
-
 prompt_template = """
 ### [INST]
 Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
@@ -94,6 +79,21 @@ Here is context to help:
 
 [/INST]
  """
+
+def init_llm_chain(model_name):
+    llm = HuggingFaceTextGenInference(
+        inference_server_url=f'http://{model_configs[model_name]["endpoint"]}/',
+        **model_configs[model_name]["params"],
+    )
+    prompt = PromptTemplate(
+        input_variables=["context", "user_prompt"],
+        template=prompt_template, 
+    )
+    return LLMChain(llm=llm, prompt=prompt)
+
+llm_chains = {
+    model_name: init_llm_chain(model_name) for model_name in model_configs
+}
 
 @app.before_request
 def init_db():
@@ -138,7 +138,7 @@ def handlePrompt():
         warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
 
     try:
-        response = llm_chain.invoke({
+        response = llm_chains[current_model].invoke({
             "context": context,
             "user_prompt": user_prompt
         })
