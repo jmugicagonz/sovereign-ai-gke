@@ -271,8 +271,17 @@ module "kuberay-monitoring" {
   depends_on = [module.namespace, module.kuberay-operator]
 }
 
-module "inference-server" {
-  source            = "../../tutorials-and-examples/hf-tgi"
+module "inference-server-mistral7b" {
+  source            = "../../tutorials-and-examples/hf-tgi-mistral7b"
+  providers         = { kubernetes = kubernetes.rag }
+  namespace         = local.kubernetes_namespace
+  additional_labels = var.additional_labels
+  autopilot_cluster = local.enable_autopilot
+  depends_on        = [module.namespace]
+}
+
+module "inference-server-codegemma7b" {
+  source            = "../../tutorials-and-examples/hf-tgi-codegemma7b"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
   additional_labels = var.additional_labels
@@ -288,7 +297,8 @@ module "frontend" {
   google_service_account        = local.rag_service_account
   namespace                     = local.kubernetes_namespace
   additional_labels             = var.additional_labels
-  inference_service_endpoint    = module.inference-server.inference_service_endpoint
+  inference_service_endpoint_mistral7b    = module.inference-server-mistral7b.inference_service_endpoint
+  inference_service_endpoint_codegemma7b = module.inference-server-codegemma7b.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name

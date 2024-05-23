@@ -21,9 +21,9 @@ locals {
 
 resource "kubernetes_service" "inference_service" {
   metadata {
-    name = "mistral-7b-instruct-service"
+    name = "codegemma-7b-service"
     labels = {
-      app = "mistral-7b-instruct"
+      app = "codegemma-7b"
     }
     namespace = var.namespace
     annotations = {
@@ -33,7 +33,7 @@ resource "kubernetes_service" "inference_service" {
   }
   spec {
     selector = {
-      app = "mistral-7b-instruct"
+      app = "codegemma-7b"
     }
     session_affinity = "ClientIP"
     port {
@@ -51,10 +51,10 @@ resource "kubernetes_deployment" "inference_deployment" {
     create = "30m"
   }
   metadata {
-    name      = "mistral-7b-instruct"
+    name      = "codegemma-7b"
     namespace = var.namespace
     labels = merge({
-      app = "mistral-7b-instruct"
+      app = "codegemma-7b"
     }, local.additional_labels)
   }
 
@@ -67,14 +67,14 @@ resource "kubernetes_deployment" "inference_deployment" {
 
     selector {
       match_labels = merge({
-        app = "mistral-7b-instruct"
+        app = "codegemma-7b"
       }, local.additional_labels)
     }
 
     template {
       metadata {
         labels = merge({
-          app = "mistral-7b-instruct"
+          app = "codegemma-7b"
         }, local.additional_labels)
       }
 
@@ -82,7 +82,7 @@ resource "kubernetes_deployment" "inference_deployment" {
         init_container {
           name    = "download-model"
           image   = "google/cloud-sdk:473.0.0-alpine"
-          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-us/mistralai/Mistral-7B-Instruct-v0.1/", "/model-data/"]
+          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-eu/codegemma/codegemma-2b/", "/model-data/"]
           volume_mount {
             mount_path = "/model-data"
             name       = "model-storage"
@@ -90,7 +90,7 @@ resource "kubernetes_deployment" "inference_deployment" {
         }
         container {
           image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
-          name  = "mistral-7b-instruct"
+          name  = "codegemma-7b"
 
           port {
             name           = "metrics"
@@ -102,7 +102,7 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           env {
             name  = "MODEL_ID"
-            value = "/model/Mistral-7B-Instruct-v0.1"
+            value = "/model/codegemma-7b"
           }
 
           env {
@@ -117,16 +117,16 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           resources {
             limits = {
-              "cpu": "8"
-              "memory": "29Gi"
-              "ephemeral-storage": "80Gi"
+              "cpu": "12"
+              "memory": "48Gi"
+              "ephemeral-storage": "120Gi"
               "nvidia.com/gpu" : "1"
             }
             requests = {
               # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
-              "cpu": "8"
-              "memory": "29Gi"
-              "ephemeral-storage": "80Gi"
+              "cpu": "12"
+              "memory": "48Gi"
+              "ephemeral-storage": "120Gi"
               "nvidia.com/gpu" : "1"
             }
           }

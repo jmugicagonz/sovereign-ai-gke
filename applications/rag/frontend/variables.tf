@@ -58,9 +58,14 @@ variable "dataset_embeddings_table_name" {
   description = "Name of the table that stores vector embeddings for input dataset"
 }
 
-variable "inference_service_endpoint" {
+variable "inference_service_endpoint_mistral7b" {
   type        = string
-  description = "Model inference k8s service endpoint"
+  description = "Model inference k8s service endpoint for the Mistral-7B_Instruct Model"
+}
+
+variable "inference_service_endpoint_codegemma7b" {
+  type        = string
+  description = "Model inference k8s service endpoint for the CodeGemma-7B Model"
 }
 
 variable "create_service_account" {
