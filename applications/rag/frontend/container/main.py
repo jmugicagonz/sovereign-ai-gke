@@ -23,7 +23,7 @@ from langchain.llms import HuggingFaceTextGenInference
 from langchain.prompts import PromptTemplate
 from rai import dlp_filter # Google's Cloud Data Loss Prevention (DLP) API. https://cloud.google.com/security/products/dlp
 from rai import nlp_filter # https://cloud.google.com/natural-language/docs/moderating-text
-# from cloud_sql import cloud_sql
+from cloud_sql import cloud_sql
 import sqlalchemy
 
 #Setup logging
@@ -76,9 +76,9 @@ def init_llm_chain(model_name):
     )
     return LLMChain(llm=llm, prompt=prompt)
 
-# llm_chains = {
-#     model_name: init_llm_chain(model_name) for model_name in model_configs
-# }
+llm_chains = {
+    model_name: init_llm_chain(model_name) for model_name in model_configs
+}
 
 prompt_template = """
 ### [INST]
@@ -95,9 +95,9 @@ Here is context to help:
 [/INST]
  """
 
-# @app.before_request
-# def init_db():
-#     cloud_sql.init_db()
+@app.before_request
+def init_db():
+    cloud_sql.init_db()
 
 @app.route('/')
 def index():    
