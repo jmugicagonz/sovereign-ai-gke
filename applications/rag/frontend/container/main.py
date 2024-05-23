@@ -76,9 +76,9 @@ def init_llm_chain(model_name):
     )
     return LLMChain(llm=llm, prompt=prompt)
 
-llm_chains = {
-    model_name: init_llm_chain(model_name) for model_name in model_configs
-}
+# llm_chains = {
+#     model_name: init_llm_chain(model_name) for model_name in model_configs
+# }
 
 prompt_template = """
 ### [INST]

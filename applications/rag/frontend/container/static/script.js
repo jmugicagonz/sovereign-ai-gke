@@ -47,16 +47,41 @@ document.getElementById("form").addEventListener("submit", function (e) {
   promptInput.value = "";
 
   var chatEl = document.getElementById("chat");
-  var promptEl = Object.assign(document.createElement("p"), {
-    classList: ["prompt"],
-  });
-  promptEl.textContent = prompt;
-  chatEl.appendChild(promptEl);
+  const userMessageEl = document.createElement("div");
+  userMessageEl.classList.add(
+    "self-end",
+    "flex",
+    "items-center",
+    "space-x-2",
+    "justify-end",
+    "mb-4"
+  ); // Tailwind classes for positioning and styling
+  userMessageEl.innerHTML = `
+    <p class="text-end break-all basis-3/4">${prompt}</p>
+    <div class="relative w-8 h-8 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
+      <svg class="absolute w-10 h-10 text-gray-400 -left-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+  `;
+  chatEl.appendChild(userMessageEl);
 
-  var responseEl = Object.assign(document.createElement("p"), {
-    classList: ["response"],
-  });
-  chatEl.appendChild(responseEl);
+  const botMessageEl = document.createElement("div");
+  botMessageEl.classList.add(
+    "self-start",
+    "flex",
+    "items-center",
+    "space-x-2",
+    "justify-start",
+    "mb-4"
+  );
+  botMessageEl.innerHTML = `
+      <img width="20px" height="20px" alt="Model logo" class="inline-block"> 
+      <p class="text-start break-words"></p>
+    `;
+  const imgElement = botMessageEl.querySelector("img");
+  imgElement.src = modelIconUrl;
+  chatEl.appendChild(botMessageEl);
   chatEl.scrollTop = chatEl.scrollHeight; // Scroll to bottom
   enableForm(false);
 
@@ -87,11 +112,11 @@ document.getElementById("form").addEventListener("submit", function (e) {
         responseEl.classList.replace("response", "warning");
         content += "\n\nWarning: " + data.response.warnings.join("\n") + "\n";
       }
-      responseEl.textContent = content;
+      botMessageEl.querySelector("p").textContent = content;
     })
     .catch((err) => {
-      responseEl.classList.replace("response", "error");
-      responseEl.textContent = err.message;
+      botMessageEl.querySelector("p").textContent = "Error: " + err.message;
+      botMessageEl.classList.add("error-message");
     })
     .finally(() => enableForm(true));
 });
