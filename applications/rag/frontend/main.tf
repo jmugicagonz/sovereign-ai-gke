@@ -55,7 +55,7 @@ module "frontend-workload-identity" {
   name                = var.google_service_account
   namespace           = var.namespace
   project_id          = var.project_id
-  roles               = ["roles/cloudsql.client", "roles/dlp.admin"]
+  roles               = ["roles/cloudsql.client", "roles/dlp.admin", "roles/artifactregistry.reader"]
 }
 
 resource "kubernetes_service" "rag_frontend_service" {
@@ -83,6 +83,9 @@ resource "kubernetes_service" "rag_frontend_service" {
 }
 
 resource "kubernetes_deployment" "rag_frontend_deployment" {
+  timeouts {
+    create = "30m"
+  }
   metadata {
     name      = "rag-frontend"
     namespace = var.namespace
@@ -92,6 +95,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
   }
 
   spec {
+    progress_deadline_seconds = 1800
     replicas = 3
     selector {
       match_labels = merge({
@@ -110,7 +114,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
         service_account_name = var.google_service_account
         container {
           #image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-          image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05vleflmlmqelvrjvenqiqciknl8948uhefwhifo"
+          image = "europe-west1-docker.pkg.dev/sovereign-genai/frontend-genai/frontendgentailocalcontrols@sha256:49f59abc847e80f13ab86c13cfd875038bef2a7fba830d937fb3c35b45c6740d"
           name  = "rag-frontend"
 
           port {
@@ -139,8 +143,8 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
           }
 
           env {
-            name  = "INFERENCE_ENDPOINT_CODEGEMMA7B"
-            value = var.inference_service_endpoint_mistral7b
+            name  = "INFERENCE_ENDPOINT_GEMMA7B"
+            value = var.inference_service_endpoint_gemma7b
           }
 
           env {

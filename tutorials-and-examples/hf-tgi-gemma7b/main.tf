@@ -21,9 +21,9 @@ locals {
 
 resource "kubernetes_service" "inference_service" {
   metadata {
-    name = "codegemma-7b-service"
+    name = "gemma-7b-service"
     labels = {
-      app = "codegemma-7b"
+      app = "gemma-7b"
     }
     namespace = var.namespace
     annotations = {
@@ -33,7 +33,7 @@ resource "kubernetes_service" "inference_service" {
   }
   spec {
     selector = {
-      app = "codegemma-7b"
+      app = "gemma-7b"
     }
     session_affinity = "ClientIP"
     port {
@@ -51,10 +51,10 @@ resource "kubernetes_deployment" "inference_deployment" {
     create = "30m"
   }
   metadata {
-    name      = "codegemma-7b"
+    name      = "gemma-7b"
     namespace = var.namespace
     labels = merge({
-      app = "codegemma-7b"
+      app = "gemma-7b"
     }, local.additional_labels)
   }
 
@@ -67,30 +67,21 @@ resource "kubernetes_deployment" "inference_deployment" {
 
     selector {
       match_labels = merge({
-        app = "codegemma-7b"
+        app = "gemma-7b"
       }, local.additional_labels)
     }
 
     template {
       metadata {
         labels = merge({
-          app = "codegemma-7b"
+          app = "gemma-7b"
         }, local.additional_labels)
       }
 
       spec {
-        init_container {
-          name    = "download-model"
-          image   = "google/cloud-sdk:473.0.0-alpine"
-          command = ["gsutil", "cp", "-r", "gs://vertex-model-garden-public-eu/codegemma/codegemma-2b/", "/model-data/"]
-          volume_mount {
-            mount_path = "/model-data"
-            name       = "model-storage"
-          }
-        }
         container {
-          image = "ghcr.io/huggingface/text-generation-inference:1.1.0"
-          name  = "codegemma-7b"
+          image = "ghcr.io/huggingface/text-generation-inference:2.0.2"
+          name  = "gemma-7b"
 
           port {
             name           = "metrics"
@@ -98,12 +89,7 @@ resource "kubernetes_deployment" "inference_deployment" {
             protocol       = "TCP"
           }
 
-          args = ["--model-id", "$(MODEL_ID)"]
-
-          env {
-            name  = "MODEL_ID"
-            value = "/model/codegemma-7b"
-          }
+          args = ["--model-id", "google/gemma-7b"]
 
           env {
             name  = "NUM_SHARD"
@@ -115,19 +101,24 @@ resource "kubernetes_deployment" "inference_deployment" {
             value = "8080"
           }
 
+          env {
+            name  = "HUGGING_FACE_HUB_TOKEN"
+            value = var.huggingface_token
+          }
+
           resources {
             limits = {
               "cpu": "12"
-              "memory": "48Gi"
-              "ephemeral-storage": "120Gi"
-              "nvidia.com/gpu" : "1"
+              "memory": "25Gi"
+              "ephemeral-storage": "40Gi"
+              "nvidia.com/gpu" : "2"
             }
             requests = {
-              # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
-              "cpu": "12"
-              "memory": "48Gi"
-              "ephemeral-storage": "120Gi"
-              "nvidia.com/gpu" : "1"
+              # Sufficient storage to fit the Gemma7b model
+              "cpu": "10"
+              "memory": "25Gi"
+              "ephemeral-storage": "40Gi"
+              "nvidia.com/gpu" : "2"
             }
           }
 
@@ -139,12 +130,6 @@ resource "kubernetes_deployment" "inference_deployment" {
           volume_mount {
             mount_path = "/data"
             name       = "data"
-          }
-
-          volume_mount {
-            mount_path = "/model"
-            name       = "model-storage"
-            read_only  = "true"
           }
 
           #liveness_probe {
@@ -172,11 +157,6 @@ resource "kubernetes_deployment" "inference_deployment" {
 
         volume {
           name = "data"
-          empty_dir {}
-        }
-
-        volume {
-          name = "model-storage"
           empty_dir {}
         }
 

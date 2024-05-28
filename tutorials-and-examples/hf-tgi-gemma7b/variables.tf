@@ -28,3 +28,8 @@ variable "additional_labels" {
 variable "autopilot_cluster" {
   type = bool
 }
+
+variable "huggingface_token" {
+  description = "Hugging Face authentication token"
+  type        = string
+}

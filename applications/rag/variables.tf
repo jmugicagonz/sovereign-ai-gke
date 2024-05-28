@@ -408,6 +408,11 @@ variable "gpu_pools" {
   }]
 }
 
+variable "huggingface_token" {
+  description = "Hugging Face authentication token"
+  type        = string
+}
+
 variable "goog_cm_deployment_name" {
   type    = string
   default = ""

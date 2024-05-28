@@ -280,10 +280,11 @@ module "inference-server-mistral7b" {
   depends_on        = [module.namespace]
 }
 
-module "inference-server-codegemma7b" {
-  source            = "../../tutorials-and-examples/hf-tgi-codegemma7b"
+module "inference-server-gemma7b" {
+  source            = "../../tutorials-and-examples/hf-tgi-gemma7b"
   providers         = { kubernetes = kubernetes.rag }
   namespace         = local.kubernetes_namespace
+  huggingface_token = var.huggingface_token
   additional_labels = var.additional_labels
   autopilot_cluster = local.enable_autopilot
   depends_on        = [module.namespace]
@@ -298,7 +299,7 @@ module "frontend" {
   namespace                     = local.kubernetes_namespace
   additional_labels             = var.additional_labels
   inference_service_endpoint_mistral7b    = module.inference-server-mistral7b.inference_service_endpoint
-  inference_service_endpoint_codegemma7b = module.inference-server-codegemma7b.inference_service_endpoint
+  inference_service_endpoint_gemma7b = module.inference-server-gemma7b.inference_service_endpoint
   cloudsql_instance             = module.cloudsql.instance
   cloudsql_instance_region      = local.cloudsql_instance_region
   db_secret_name                = module.cloudsql.db_secret_name

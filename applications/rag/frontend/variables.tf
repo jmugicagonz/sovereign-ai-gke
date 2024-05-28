@@ -63,9 +63,9 @@ variable "inference_service_endpoint_mistral7b" {
   description = "Model inference k8s service endpoint for the Mistral-7B_Instruct Model"
 }
 
-variable "inference_service_endpoint_codegemma7b" {
+variable "inference_service_endpoint_gemma7b" {
   type        = string
-  description = "Model inference k8s service endpoint for the CodeGemma-7B Model"
+  description = "Model inference k8s service endpoint for the Gemma-7B Model"
 }
 
 variable "create_service_account" {

@@ -117,17 +117,17 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           resources {
             limits = {
-              "cpu": "8"
-              "memory": "29Gi"
-              "ephemeral-storage": "80Gi"
-              "nvidia.com/gpu" : "1"
+              "cpu": "15"
+              "memory": "58Gi"
+              "ephemeral-storage": "120Gi"
+              "nvidia.com/gpu" : "2"
             }
             requests = {
               # Sufficient storage to fit the Mistral-7B-Instruct-v0.1 model
-              "cpu": "8"
-              "memory": "29Gi"
-              "ephemeral-storage": "80Gi"
-              "nvidia.com/gpu" : "1"
+              "cpu": "15"
+              "memory": "58Gi"
+              "ephemeral-storage": "120Gi"
+              "nvidia.com/gpu" : "2"
             }
           }
 
