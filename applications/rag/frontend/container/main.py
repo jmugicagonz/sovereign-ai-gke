@@ -36,7 +36,7 @@ app.jinja_env.lstrip_blocks = True
 
 # initialize parameters
 MISTRAL_INFERENCE_ENDPOINT = os.environ.get('INFERENCE_ENDPOINT_MISTRAL7B', 'mistral-endpoint')
-CODEGEMMA_INFERENCE_ENDPOINT = os.environ.get('INFERENCE_ENDPOINT_CODEGEMMA7B', 'codegemma-endpoint')
+GEMMA_INFERENCE_ENDPOINT = os.environ.get('INFERENCE_ENDPOINT_GEMMA7B', 'gemma-endpoint')
 
 model_configs = {
     "Mistral7B": {
@@ -50,8 +50,8 @@ model_configs = {
             'repetition_penalty': 1.03,
         }
     },
-    "CodeGemma7b": {
-        "endpoint":CODEGEMMA_INFERENCE_ENDPOINT ,
+    "Gemma7b": {
+        "endpoint":GEMMA_INFERENCE_ENDPOINT ,
         "params": {
             'max_new_tokens':512,
             'top_k': 10,
@@ -101,7 +101,7 @@ def init_db():
 
 @app.route('/')
 def index():    
-    return render_template('index.html', model1="Mistral7B", model2="CodeGemma7b")
+    return render_template('index.html', model1="Mistral7B", model2="Gemma7b")
 
 
 @app.route('/select_model', methods=['POST'])
