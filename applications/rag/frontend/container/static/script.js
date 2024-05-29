@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+var converter = new showdown.Converter();
+
 document.getElementById("models").addEventListener("change", function (e) {
   const selectedModel = e.target.value;
 
@@ -110,13 +112,17 @@ document.getElementById("form").addEventListener("submit", function (e) {
       var content = data.response.text;
       if (data.response.warnings && data.response.warnings.length > 0) {
         // botMessageEl.classList.replace("response", "warning");
-        content += "\n\nWarning: " + data.response.warnings.join("\n") + "\n";
+        // content += "\n\nWarning: " + data.response.warnings.join("\n") + "\n";
+        console.log("Warning in response: ", data.response.warnings);
       }
-      botMessageEl.querySelector("p").textContent = content;
+      var htmlContent = converter.makeHtml(content); // Convert Markdown to HTML
+      botMessageEl.querySelector("p").innerHTML = htmlContent; // Use innerHTML instead of textContent
+      // botMessageEl.querySelector("p").textContent = content;
     })
     .catch((err) => {
-      botMessageEl.querySelector("p").textContent = "Error: " + err.message;
+      // botMessageEl.querySelector("p").textContent = "Error: " + err.message;
       // botMessageEl.classList.add("error-message");
+      console.error("Error is response: ", err);
     })
     .finally(() => enableForm(true));
 });
