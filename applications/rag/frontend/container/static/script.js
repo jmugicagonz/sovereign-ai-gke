@@ -109,14 +109,14 @@ document.getElementById("form").addEventListener("submit", function (e) {
     .then((data) => {
       var content = data.response.text;
       if (data.response.warnings && data.response.warnings.length > 0) {
-        responseEl.classList.replace("response", "warning");
+        // botMessageEl.classList.replace("response", "warning");
         content += "\n\nWarning: " + data.response.warnings.join("\n") + "\n";
       }
       botMessageEl.querySelector("p").textContent = content;
     })
     .catch((err) => {
       botMessageEl.querySelector("p").textContent = "Error: " + err.message;
-      botMessageEl.classList.add("error-message");
+      // botMessageEl.classList.add("error-message");
     })
     .finally(() => enableForm(true));
 });
