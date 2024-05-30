@@ -126,16 +126,18 @@ def handlePrompt():
         return 'missing required prompt', 400
 
     user_prompt = data['prompt']
+    connect_rag = data['connectRAG']  # Get the checkbox state
     log.info(f"handle user prompt: {user_prompt}")
 
     context = ""
-
-    try:
-        context = cloud_sql.fetchContext(user_prompt)
-    except Exception as err:
-        error_traceback = traceback.format_exc()
-        log.warn(f"Error: {err}\nTraceback:\n{error_traceback}")
-        warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
+    if connect_rag:
+        try:
+            context = cloud_sql.fetchContext(user_prompt)
+            print("Connecting to knowledge!")
+        except Exception as err:
+            error_traceback = traceback.format_exc()
+            log.warn(f"Error: {err}\nTraceback:\n{error_traceback}")
+            warnings.append(f"Error: {err}\nTraceback:\n{error_traceback}")
 
     try:
         response = llm_chains[current_model].invoke({

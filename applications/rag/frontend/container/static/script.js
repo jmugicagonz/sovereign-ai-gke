@@ -17,6 +17,7 @@ var converter = new showdown.Converter();
 
 document.getElementById("models").addEventListener("change", function (e) {
   const selectedModel = e.target.value;
+  console.log("Changing model: ");
 
   fetch("/select_model", {
     method: "POST",
@@ -37,12 +38,19 @@ document.getElementById("models").addEventListener("change", function (e) {
     });
 });
 
+// Listen to the change event of the checkbox
+document.getElementById("RAG").addEventListener("change", function (e) {
+  const activateRag = e.target.checked;
+  console.log("RAG checkbox clicked", activateRag);
+});
+
 // Handle the chat form submission
 document.getElementById("form").addEventListener("submit", function (e) {
   e.preventDefault();
 
   var promptInput = document.getElementById("prompt");
   var prompt = promptInput.value;
+  var ragCheckbox = document.getElementById("RAG").checked; // Get the state of the checkbox
   if (prompt === "") {
     return;
   }
@@ -90,6 +98,7 @@ document.getElementById("form").addEventListener("submit", function (e) {
   // Collect filter data
   let data = {
     prompt: prompt,
+    connectRAG: ragCheckbox,
   };
 
   var body = JSON.stringify(data);
