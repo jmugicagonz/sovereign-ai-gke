@@ -114,7 +114,7 @@ resource "kubernetes_deployment" "rag_frontend_deployment" {
         service_account_name = var.google_service_account
         container {
           #image = "us-central1-docker.pkg.dev/ai-on-gke/rag-on-gke/frontend@sha256:d65b538742ee29826ee629cfe05c0008e7c09ce5357ddc08ea2eaf3fd6cefe4b"
-          image = "europe-west1-docker.pkg.dev/sovereign-genai/frontend-genai/frontendgentailocalcontrols@sha256:33d5ee727d3b7371a5e0a52a42bafa7ace14c68381c3179cceae64078aff1aec"
+          image = "europe-west1-docker.pkg.dev/sovereign-genai/frontend-genai/frontendgentailocalcontrols@sha256:3bb450eca8371a1fe5035cc020088fd84c5c64cc5c144ff7ba455b3022d2e42d"
           name  = "rag-frontend"
 
           port {
