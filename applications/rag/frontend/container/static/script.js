@@ -109,11 +109,11 @@ document.getElementById("form").addEventListener("submit", function (e) {
     headers: { "Content-Type": "application/json" },
     body: body,
   })
-    .then((response) => {
+    .then(async (response) => {
       if (!response.ok) {
-        return response.json().then((errorData) => {
-          throw new Error(errorData.errorMessage);
-        });
+        const errorData = await response.json();
+        console.log("Error in response: ", errorData.errorMessage);
+        throw new Error(errorData.errorMessage);
       }
       return response.json();
     })
@@ -131,7 +131,8 @@ document.getElementById("form").addEventListener("submit", function (e) {
     .catch((err) => {
       // botMessageEl.querySelector("p").textContent = "Error: " + err.message;
       // botMessageEl.classList.add("error-message");
-      console.error("Error is response: ", err);
+      console.error("Error in response: ", err);
+      throw new Error(errorData.errorMessage);
     })
     .finally(() => enableForm(true));
 });

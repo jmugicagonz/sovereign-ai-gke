@@ -46,7 +46,7 @@ model_configs = {
             'top_k': 10,
             'top_p': 0.95,
             'typical_p': 0.95,
-            'temperature': 0.01,
+            'temperature': 0.1,
             'repetition_penalty': 1.03,
         }
     },
@@ -57,7 +57,7 @@ model_configs = {
             'top_k': 10,
             'top_p': 0.95,
             'typical_p': 0.95,
-            'temperature': 0.01,
+            'temperature': 0.1,
             'repetition_penalty': 1.03,
         }
     }
@@ -67,12 +67,18 @@ current_model = "Mistral7B"
 
 prompt_template = """
 ### [INST]
-Instruction: Always assist with care, respect, and truth. Respond with utmost utility yet securely.
+Instruction: 
+Your name is Thales AI Assistant. You are a virtual assistant designed to provide helpful and accurate information.
+
+Always assist with care, respect, and truth. Respond with utmost utility yet securely.
 Avoid harmful, unethical, prejudiced, or negative content.
 Ensure replies promote fairness and positivity.
-Here is context to help:
+
+Here is context to help you answer:
 
 {context}
+
+If the context is empty, answer based on your knowledge. If the context is not empty, answer strictly based on the context.
 
 ### QUESTION:
 {user_prompt}
@@ -89,7 +95,7 @@ def init_llm_chain(model_name):
         input_variables=["context", "user_prompt"],
         template=prompt_template, 
     )
-    return LLMChain(llm=llm, prompt=prompt)
+    return LLMChain(llm=llm, prompt=prompt, verbose=True)
 
 llm_chains = {
     model_name: init_llm_chain(model_name) for model_name in model_configs
