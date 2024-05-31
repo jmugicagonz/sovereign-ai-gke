@@ -89,7 +89,7 @@ resource "kubernetes_deployment" "inference_deployment" {
             protocol       = "TCP"
           }
 
-          args = ["--model-id", "google/gemma-7b"]
+          args = ["--model-id", "meta-llama/Meta-Llama-3-8B"]
 
           env {
             name  = "NUM_SHARD"
@@ -108,16 +108,16 @@ resource "kubernetes_deployment" "inference_deployment" {
 
           resources {
             limits = {
-              "cpu": "12"
+              "cpu": "20"
               "memory": "25Gi"
-              "ephemeral-storage": "40Gi"
+              "ephemeral-storage": "80Gi"
               "nvidia.com/gpu" : "2"
             }
             requests = {
               # Sufficient storage to fit the Gemma7b model
-              "cpu": "10"
+              "cpu": "20"
               "memory": "25Gi"
-              "ephemeral-storage": "40Gi"
+              "ephemeral-storage": "80Gi"
               "nvidia.com/gpu" : "2"
             }
           }
